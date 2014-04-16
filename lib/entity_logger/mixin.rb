@@ -13,21 +13,24 @@ module EntityLogger
     included do
       def self.log(*attrs)
         self.logger_writer = attrs.shift
-        self.prefix = attrs.shift
         self.tags_for_logging = attrs
       end
 
     private
-      class_attribute :tags_for_logging, :logger_writer, :prefix
+      class_attribute :tags_for_logging, :logger_writer
     end
 
     def log_with_tags(&block)
       tags = extract_tags(self.tags_for_logging)
-      logger.tagged(tags) { yield } if tags
+      logger.tagged(tags) { yield }
     end
 
     def logger
-      EntityLogger::TaggedLogging.new(self.logger_writer, self.prefix)
+      if self.logger_writer.is_a?(ActiveSupport::TaggedLogging)
+        self.logger_writer
+      else
+        ActiveSupport::TaggedLogging.new(self.logger_writer)
+      end
     end
 
     %w(info error debug).each do |level|
@@ -48,8 +51,12 @@ module EntityLogger
         case attr
         when Hash
           attr.values.map { |v| v.call(self) }
-        else
+        when String
+          attr
+        when Symbol
           send(attr)
+        else
+          raise ArgumentError, attr
         end
       end.flatten(1)
     end
