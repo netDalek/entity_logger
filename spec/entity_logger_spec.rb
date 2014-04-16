@@ -18,7 +18,7 @@ describe EntityLogger do
   describe "#log_with_tags" do
     it 'should wrap inner log call with tags' do
       obj = EntityClass.new
-      obj.log_with_tags { obj.logger.info('test') }.should be_true
+      obj.log_with_tags { obj.info('test') }.should be_true
     end
   end
 

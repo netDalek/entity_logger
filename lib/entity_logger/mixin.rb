@@ -21,17 +21,22 @@ module EntityLogger
     end
 
     def log_with_tags(&block)
-      tags = extract_tags(self.tags_for_logging)
-      logger.tagged(tags) { yield }
+      if @without_log_tags
+        yield
+      else
+        begin
+          tags = extract_tags(self.tags_for_logging)
+          @without_log_tags = true
+          logger.tagged(tags) { yield }
+        ensure
+          @without_log_tags = false
+        end
+      end
     end
 
     %w(info error debug).each do |level|
       define_method(level) do |msg|
-        tags = extract_tags(self.tags_for_logging)
-
-        if tags
-          logger.tagged(tags) { logger.send(level, msg) }
-        else
+        log_with_tags do
           logger.send(level, msg)
         end
       end
