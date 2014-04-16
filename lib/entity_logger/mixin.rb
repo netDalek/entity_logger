@@ -12,25 +12,17 @@ module EntityLogger
 
     included do
       def self.log(*attrs)
-        self.logger_writer = attrs.shift
+        self.logger = attrs.shift
         self.tags_for_logging = attrs
       end
 
     private
-      class_attribute :tags_for_logging, :logger_writer
+      class_attribute :tags_for_logging, :logger
     end
 
     def log_with_tags(&block)
       tags = extract_tags(self.tags_for_logging)
       logger.tagged(tags) { yield }
-    end
-
-    def logger
-      if self.logger_writer.is_a?(ActiveSupport::TaggedLogging)
-        self.logger_writer
-      else
-        ActiveSupport::TaggedLogging.new(self.logger_writer)
-      end
     end
 
     %w(info error debug).each do |level|
