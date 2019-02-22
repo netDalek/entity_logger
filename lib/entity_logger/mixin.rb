@@ -10,6 +10,15 @@ module EntityLogger
   module Mixin
     extend ActiveSupport::Concern
 
+    LOG_METHODS = %w[
+      debug
+      error
+      fatal
+      info
+      unknown
+      warn
+    ]
+
     included do
       def self.log(*attrs)
         self.logger = attrs.shift
@@ -34,7 +43,7 @@ module EntityLogger
       end
     end
 
-    %w(info error debug).each do |level|
+    LOG_METHODS.each do |level|
       define_method(level) do |msg|
         log_with_tags do
           logger.send(level, msg)
